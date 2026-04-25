@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0d10">
+<title>Honest Bet — Mauritius</title>
+<style>
+:root {
+  --bg: #0b0d10; --panel: #161a20; --panel-2: #1f242c;
+  --text: #e6e8eb; --muted: #8a929c;
+  --accent: #4cc38a; --accent-2: #5a9bff;
+  --warn: #e3a951; --danger: #e35151;
+  --border: #262c35; --radius: 14px;
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+header { position: sticky; top: 0; background: var(--bg);
+  padding: 12px 16px 8px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); z-index: 10; gap: 8px; }
+header .title { font-weight: 700; font-size: 18px; letter-spacing: -.01em; flex: 1; }
+header .bankroll { background: var(--panel); padding: 6px 12px; border-radius: 999px;
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; }
+header .logout { background: transparent; color: var(--muted); font-size: 18px;
+  padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; }
+main { padding: 12px 12px calc(86px + var(--safe-bottom)); max-width: 640px; margin: 0 auto; }
+.screen { display: none; } .screen.active { display: block; } .hidden { display: none !important; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; }
+.card h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.card.warn { background: #2a1f10; border-color: #5a4321; color: #f3d79a; }
+.card .big-number { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+label { display: block; margin-top: 12px; font-size: 13px; color: var(--muted); }
+input, select, textarea { width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; color: var(--text); font-size: 16px;
+  font-family: inherit; margin-top: 4px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent-2); }
+button { font-size: 15px; font-weight: 600; border: 0; padding: 14px 16px;
+  border-radius: 12px; cursor: pointer; font-family: inherit; }
+button.primary { background: var(--accent); color: #08120c; }
+button.primary.big { width: 100%; padding: 16px; font-size: 17px; }
+button.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.action-bar { display: flex; gap: 8px; margin-top: 8px; }
+.action-bar > button { flex: 1; }
+.muted { color: var(--muted); font-size: 14px; } .small { font-size: 12px; }
+.step-bar { display: flex; gap: 4px; margin-bottom: 8px; font-size: 12px;
+  color: var(--muted); overflow-x: auto; }
+.step { padding: 6px 10px; background: var(--panel); border-radius: 999px; white-space: nowrap; }
+.step.active { background: var(--accent-2); color: #06121f; }
+.step.done { background: var(--accent); color: #08120c; }
+#tabbar { position: fixed; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: var(--panel); border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom); z-index: 10; }
+#tabbar button { background: transparent; color: var(--muted); border-radius: 0;
+  padding: 10px 0 8px; display: flex; flex-direction: column; align-items: center;
+  gap: 2px; font-size: 11px; font-weight: 500; }
+#tabbar button.active { color: var(--text); }
+#tabbar button div { font-size: 20px; line-height: 1; }
+.bet-list { list-style: none; padding: 0; margin: 0; }
+.bet-list li { padding: 10px 0; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 4px; }
+.bet-list li:last-child { border-bottom: 0; }
+.bet-list .row { display: flex; justify-content: space-between; gap: 8px; }
+.bet-list .name { font-weight: 600; }
+.bet-list .meta { font-size: 12px; color: var(--muted); }
+.bet-list .pos { color: var(--accent); } .bet-list .neg { color: var(--danger); }
+.outcome-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.outcome-row input { margin-top: 0; }
+.outcome-row .remove { background: var(--panel-2); color: var(--muted);
+  border: 1px solid var(--border); width: 38px; padding: 0; height: 38px; font-size: 18px; }
+.estimate-block { background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; margin-top: 8px; }
+.estimate-block .name-row { display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+.estimate-block .pct { font-variant-numeric: tabular-nums; font-size: 18px; color: var(--accent-2); }
+.estimate-block input[type="range"] { width: 100%; margin: 8px 0; padding: 0; background: transparent; }
+.estimate-block textarea { min-height: 60px; resize: vertical; }
+.sum-card .sum { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.sum.warn { color: var(--warn); } .sum.bad { color: var(--danger); } .sum.ok { color: var(--accent); }
+.reveal-row { display: grid; grid-template-columns: 1fr 110px; gap: 8px; align-items: center;
+  margin-top: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.reveal-row:last-child { border-bottom: 0; }
+.reveal-row .label .name { font-weight: 600; }
+.reveal-row .label .est { font-size: 12px; color: var(--muted); }
+.reveal-row input { margin-top: 0; }
+.eval-row { margin-top: 12px; padding: 12px; background: var(--panel-2);
+  border-radius: 12px; border-left: 4px solid var(--border); }
+.eval-row.positive { border-left-color: var(--accent); }
+.eval-row.negative { border-left-color: var(--danger); }
+.eval-row .verdict { display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+.eval-row .verdict.positive { background: var(--accent); color: #08120c; }
+.eval-row .verdict.negative { background: var(--danger); color: #fff; }
+.eval-row table { width: 100%; margin-top: 8px; font-size: 13px; }
+.eval-row table td:first-child { color: var(--muted); }
+.eval-row table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.eval-row .bet-controls { display: grid; grid-template-columns: 1fr 130px;
+  gap: 8px; align-items: end; margin-top: 10px; }
+.eval-row label { margin-top: 0; }
+.checkbox { display: flex; gap: 8px; align-items: center; margin-top: 12px;
+  font-size: 13px; color: var(--muted); }
+.checkbox input { width: auto; margin-top: 0; }
+.settle-actions { display: flex; gap: 6px; margin-top: 6px; }
+.settle-actions button { flex: 1; padding: 10px; font-size: 13px; }
+.settle-actions .win { background: var(--accent); color: #08120c; }
+.settle-actions .lose { background: var(--danger); color: #fff; }
+.settle-actions .push { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+#cal-chart { margin-top: 12px; }
+.cal-bar-row { display: grid; grid-template-columns: 60px 1fr 80px;
+  gap: 8px; align-items: center; margin-top: 6px; font-size: 12px; }
+.cal-bar-row .bucket { color: var(--muted); }
+.cal-bar-row .bar-wrap { position: relative; height: 18px; background: var(--panel-2);
+  border-radius: 4px; overflow: hidden; }
+.cal-bar-row .bar { position: absolute; top: 0; bottom: 0; background: var(--accent-2); }
+.cal-bar-row .marker { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--warn); }
+.cal-bar-row .gap { font-variant-numeric: tabular-nums; text-align: right; }
+.cal-bar-row .gap.neg { color: var(--danger); }
+.cal-bar-row .gap.pos { color: var(--accent); }
+.cal-bar-row .gap.empty { color: var(--muted); }
+.cal-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.cal-stat-grid .stat { background: var(--panel-2); border-radius: 10px; padding: 10px; }
+.cal-stat-grid .stat .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cal-stat-grid .stat .k { font-size: 12px; color: var(--muted); }
+.toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+  background: var(--panel-2); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: 999px; font-size: 13px; color: var(--text);
+  opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 100;
+  max-width: 90%; text-align: center; }
+.toast.show { opacity: 1; }
+.toast.error { border-color: var(--danger); color: #ffd7d7; }
+.login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-card { background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; width: 100%; max-width: 400px; }
+.login-card h1 { margin: 0 0 8px; font-size: 24px; }
+.login-card p { margin: 8px 0; }
+.login-card input { margin: 12px 0; }
+.login-card button { width: 100%; }
+.value-list { list-style: none; padding: 0; margin: 0; }
+.value-card { background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px; margin-top: 8px; cursor: pointer; }
+.value-card .vc-event { font-weight: 600; }
+.value-card .vc-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.value-card .vc-rows { margin-top: 8px; display: grid; gap: 4px; }
+.value-card .vc-row { display: grid; grid-template-columns: 1fr 70px 70px;
+  gap: 8px; font-size: 13px; }
+.value-card .vc-row .vc-prob { font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.value-card .vc-row .vc-odds { font-variant-numeric: tabular-nums; text-align: right; }
+.sport-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; }
+.sport-tabs button { background: var(--panel-2); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+.sport-tabs button.active { background: var(--accent-2); color: #06121f; border-color: var(--accent-2); }
+</style>
+</head>
+<body>
+
+<section id="login-screen" class="login-screen hidden">
+  <div class="login-card">
+    <h1>Honest Bet</h1>
+    <p class="muted">Football, tennis, basketball. A discipline tool, not a tipster.</p>
+    <p class="muted small">Enter your email. You'll get a magic link — no password.</p>
+    <input id="login-email" type="email" placeholder="you@example.com" autocomplete="email">
+    <button class="primary big" id="btn-send-magic">Send magic link</button>
+    <div id="login-msg" class="muted small"></div>
+  </div>
+</section>
+
+<header class="hidden">
+  <div class="title">Honest Bet</div>
+  <div class="bankroll" id="bankroll-pill">—</div>
+  <button class="logout" id="btn-logout" title="Sign out">⎋</button>
+</header>
+
+<main id="app" class="hidden">
+  <section id="screen-home" class="screen active">
+    <div class="card" id="bankroll-card">
+      <h2>Bankroll</h2>
+      <div class="big-number" id="balance-big">—</div>
+      <div class="muted" id="balance-meta">Tap to set up your bankroll</div>
+    </div>
+    <div class="card">
+      <h2>Pending bets</h2>
+      <ul id="pending-list" class="bet-list"><li class="muted">No pending bets.</li></ul>
+    </div>
+    <div class="card">
+      <h2>Recently settled</h2>
+      <ul id="recent-list" class="bet-list"><li class="muted">Nothing settled yet.</li></ul>
+    </div>
+    <div class="card calibration-card">
+      <h2>Are your estimates calibrated?</h2>
+      <div class="muted" id="cal-summary">Settle ~50 bets to see if your judgment beats the market.</div>
+      <div id="cal-mini"></div>
+    </div>
+    <div class="action-bar">
+      <button class="primary big" id="btn-new-race">+ New event</button>
+    </div>
+  </section>
+
+  <section id="screen-value" class="screen">
+    <div class="card">
+      <h2>Today's value bets</h2>
+      <div class="muted">Pinnacle's "no-juice" probability vs other books. Tap a match to start the discipline workflow with these outcomes pre-loaded.</div>
+      <div class="sport-tabs">
+        <button data-sport="soccer_epl" class="active">⚽ EPL</button>
+        <button data-sport="soccer_uefa_champs_league">⚽ UCL</button>
+        <button data-sport="basketball_nba">🏀 NBA</button>
+        <button data-sport="tennis_atp_aus_open_singles">🎾 ATP</button>
+      </div>
+      <div id="value-status" class="muted small"></div>
+      <ul id="value-list" class="value-list"></ul>
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="home">Back</button>
+      <button class="ghost" id="btn-refresh-value">Refresh</button>
+    </div>
+  </section>
+
+  <section id="screen-setup" class="screen">
+    <div class="step-bar">
+      <span class="step active">1. Setup</span>
+      <span class="step">2. Estimate (blind)</span>
+      <span class="step">3. Reveal odds</span>
+    </div>
+    <div class="card">
+      <label>Event</label>
+      <input id="setup-event" placeholder="e.g. Liverpool vs Man City">
+      <label>Competition (optional)</label>
+      <input id="setup-venue" placeholder="e.g. Premier League">
+      <label>Date</label>
+      <input id="setup-date" type="date">
+    </div>
+    <div class="card">
+      <h2>Outcomes</h2>
+      <div class="muted">Football: home / draw / away. Tennis &amp; basketball: just two players/teams.</div>
+      <div id="outcomes-list"></div>
+      <button class="ghost" id="btn-add-outcome">+ Add outcome</button>
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="home">Cancel</button>
+      <button class="primary" id="btn-go-estimate">Next: estimate →</button>
+    </div>
+  </section>
+
+  <section id="screen-estimate" class="screen">
+    <div class="step-bar">
+      <span class="step done">1. Setup ✓</span>
+      <span class="step active">2. Estimate (blind)</span>
+      <span class="step">3. Reveal odds</span>
+    </div>
+    <div class="card warn">
+      <strong>You have not seen any odds yet.</strong> Write your win-probability
+      estimate and one sentence on why. Once locked, the database itself will refuse to let you edit them.
+    </div>
+    <div id="estimate-list"></div>
+    <div class="card sum-card">
+      <div>Your probabilities sum to: <span id="sum-display" class="sum">0%</span></div>
+      <div class="muted" id="sum-hint">Should be close to 100%. Server rejects above 105%.</div>
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="setup">← Back</button>
+      <button class="primary" id="btn-lock-estimates">Lock in estimates</button>
+    </div>
+  </section>
+
+  <section id="screen-reveal" class="screen">
+    <div class="step-bar">
+      <span class="step done">1. Setup ✓</span>
+      <span class="step done">2. Estimate ✓</span>
+      <span class="step active">3. Reveal odds</span>
+    </div>
+    <div class="card">
+      <h2>Enter the market odds</h2>
+      <div class="muted">Decimal odds from Totelepep / Supertote / SMSPariaz (or whichever bookie you'll use).</div>
+      <div id="reveal-list"></div>
+      <button class="primary" id="btn-evaluate">Evaluate edge</button>
+    </div>
+    <div id="evaluation-card" class="card hidden">
+      <h2>Evaluation</h2>
+      <div id="evaluations"></div>
+      <div class="muted small">Stake = ¼-Kelly × bankroll. Negative edge → don't bet.</div>
+      <label class="checkbox">
+        <input type="checkbox" id="override-negative">
+        I understand I'm placing a bet against the math (override)
+      </label>
+      <div class="action-bar">
+        <button class="ghost" data-go="home">Cancel</button>
+        <button class="primary" id="btn-place">Place selected bets</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-bankroll" class="screen">
+    <div class="card">
+      <h2>Set up bankroll</h2>
+      <div class="muted">The only money you're willing to lose. Don't lie to yourself here.</div>
+      <label>Currency</label>
+      <select id="bk-currency">
+        <option value="MUR" selected>MUR</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select>
+      <label>Starting amount</label>
+      <input id="bk-amount" type="number" min="0" step="100" placeholder="e.g. 5000">
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="home">Cancel</button>
+      <button class="primary" id="btn-init-bankroll">Save</button>
+    </div>
+  </section>
+
+  <section id="screen-settle" class="screen">
+    <div class="card">
+      <h2>Settle pending bets</h2>
+      <div class="muted">After the match, mark each bet.</div>
+      <ul id="settle-list" class="bet-list"></ul>
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="home">Done</button>
+    </div>
+  </section>
+
+  <section id="screen-truth" class="screen">
+    <div class="card">
+      <h2>Are your probabilities calibrated?</h2>
+      <div class="muted">For every claimed-probability bucket, this shows your actual win rate.
+        Calibrated = your 60% picks really win 60% of the time.</div>
+      <div id="cal-stats"></div>
+      <div id="cal-chart"></div>
+      <div class="muted small" id="cal-disclaimer"></div>
+    </div>
+    <div class="action-bar">
+      <button class="ghost" data-go="home">Back</button>
+    </div>
+  </section>
+</main>
+
+<nav id="tabbar" class="hidden">
+  <button data-go="home" class="active"><div>🏠</div><span>Home</span></button>
+  <button data-go="value"><div>🔭</div><span>Value</span></button>
+  <button data-go="setup"><div>🎯</div><span>New</span></button>
+  <button data-go="settle"><div>📝</div><span>Settle</span></button>
+  <button data-go="truth"><div>🪞</div><span>Truth</span></button>
+</nav>
+
+<script>
+window.SUPABASE_URL = "https://oswzirwfpibhhndpmlbj.supabase.co";
+window.SUPABASE_ANON_KEY = "sb_publishable_YQQXwOVDAkffz61bRC7LOA_l9XgpFri";
+</script>
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const sb = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+const state = {
+  bankroll: null,
+  currency: "MUR",
+  race: null,
+  estimates: {},
+  evaluations: [],
+  valueSport: "soccer_epl",
+};
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) showApp(); else showLogin();
+});
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) showApp(); else showLogin();
+});
+
+function showLogin() {
+  $("#login-screen").classList.remove("hidden");
+  $("header").classList.add("hidden");
+  $("#app").classList.add("hidden");
+  $("#tabbar").classList.add("hidden");
+}
+function showApp() {
+  $("#login-screen").classList.add("hidden");
+  $("header").classList.remove("hidden");
+  $("#app").classList.remove("hidden");
+  $("#tabbar").classList.remove("hidden");
+  refreshHome();
+}
+
+$("#btn-send-magic").addEventListener("click", async () => {
+  const email = $("#login-email").value.trim();
+  if (!email) return ($("#login-msg").textContent = "Enter your email");
+  $("#login-msg").textContent = "Sending…";
+  const { error } = await sb.auth.signInWithOtp({
+    email, options: { emailRedirectTo: window.location.origin + window.location.pathname },
+  });
+  $("#login-msg").textContent = error
+    ? "Error: " + error.message
+    : "Magic link sent. Check your email and tap the link to sign in.";
+});
+
+$("#btn-logout").addEventListener("click", async () => { await sb.auth.signOut(); });
+
+function toast(msg, kind = "ok") {
+  let el = $(".toast");
+  if (!el) { el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+  el.textContent = msg;
+  el.className = "toast show " + (kind === "error" ? "error" : "");
+  setTimeout(() => { el.className = "toast"; }, 2800);
+}
+
+function go(screen) {
+  $$(".screen").forEach((s) => s.classList.remove("active"));
+  const t = $("#screen-" + screen);
+  if (t) t.classList.add("active");
+  $$("#tabbar button").forEach((b) => b.classList.toggle("active", b.dataset.go === screen));
+  window.scrollTo(0, 0);
+  if (screen === "home")    refreshHome();
+  if (screen === "settle")  refreshSettle();
+  if (screen === "truth")   refreshTruth();
+  if (screen === "setup")   prepareSetup();
+  if (screen === "value")   refreshValue();
+}
+document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-go]");
+  if (t) go(t.dataset.go);
+});
+
+function fmt(n) {
+  if (n === null || n === undefined) return "—";
+  return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function impliedProb(odds) { return 1 / odds; }
+function edgeOf(p, odds)   { return p - impliedProb(odds); }
+function kellyFraction(p, odds, cap = 0.25) {
+  if (odds <= 1 || p <= 0 || p >= 1) return 0;
+  const b = odds - 1, q = 1 - p;
+  const f = (b * p - q) / b;
+  return f <= 0 ? 0 : Math.min(f, cap);
+}
+
+async function refreshHome() {
+  const { data: br } = await sb.from("bankroll").select("*").maybeSingle();
+  state.bankroll = br;
+  if (!br) {
+    $("#balance-big").textContent = "—";
+    $("#balance-meta").textContent = "Tap to set up your bankroll";
+    $("#bankroll-card").onclick = () => go("bankroll");
+    $("#bankroll-pill").textContent = "Set bankroll";
+    $("#bankroll-pill").onclick = () => go("bankroll");
+  } else {
+    state.currency = br.currency;
+    $("#balance-big").textContent = fmt(br.balance) + " " + br.currency;
+    const pnl = br.balance - br.starting;
+    const pnlPct = br.starting ? (pnl / br.starting * 100) : 0;
+    $("#balance-meta").textContent =
+      (pnl >= 0 ? "+" : "") + fmt(pnl) + " " + br.currency +
+      " (" + (pnlPct >= 0 ? "+" : "") + pnlPct.toFixed(1) + "%) since start";
+    $("#bankroll-card").onclick = null;
+    $("#bankroll-pill").textContent = fmt(br.balance) + " " + br.currency;
+    $("#bankroll-pill").onclick = null;
+  }
+
+  const { data: pending } = await sb.from("bets")
+    .select("*, outcomes(name), races(event)")
+    .eq("status", "pending").order("placed_at", { ascending: false });
+  renderList("#pending-list", pending, (b) => `
+    <li><div class="row"><span class="name">${esc(b.outcomes?.name)}</span>
+        <span>${fmt(b.stake)} @ ${(+b.market_odds).toFixed(2)}</span></div>
+      <div class="meta">${esc(b.races?.event)} · est ${(b.estimate*100).toFixed(0)}% · edge ${(b.edge*100).toFixed(1)}%</div></li>`,
+    "No pending bets.");
+
+  const { data: recent } = await sb.from("bets")
+    .select("*, outcomes(name), races(event)")
+    .neq("status", "pending").order("settled_at", { ascending: false }).limit(10);
+  renderList("#recent-list", recent, (b) => {
+    const cls = b.profit > 0 ? "pos" : (b.profit < 0 ? "neg" : "");
+    const sign = b.profit > 0 ? "+" : "";
+    return `<li><div class="row"><span class="name">${esc(b.outcomes?.name)}</span>
+        <span class="${cls}">${sign}${fmt(b.profit)}</span></div>
+      <div class="meta">${esc(b.races?.event)} · ${b.status} · stake ${fmt(b.stake)} @ ${(+b.market_odds).toFixed(2)}</div></li>`;
+  }, "Nothing settled yet.");
+
+  const cal = await loadCalibration();
+  if (cal.total >= 10) {
+    $("#cal-summary").textContent =
+      `${cal.total} settled bets · hit rate ${(cal.hit_rate*100).toFixed(1)}% · ROI ${(cal.roi*100).toFixed(1)}%`;
+    $("#cal-mini").innerHTML = renderCalChart(cal, true);
+  } else {
+    $("#cal-summary").textContent = `Only ${cal.total} settled bet(s). Need ~50 to draw conclusions.`;
+    $("#cal-mini").innerHTML = "";
+  }
+}
+
+function renderList(sel, rows, fn, empty) {
+  const el = $(sel);
+  if (!rows || rows.length === 0) { el.innerHTML = `<li class="muted">${empty}</li>`; return; }
+  el.innerHTML = rows.map(fn).join("");
+}
+
+$("#btn-init-bankroll").addEventListener("click", async () => {
+  const amount = parseFloat($("#bk-amount").value);
+  const currency = $("#bk-currency").value;
+  if (!(amount > 0)) return toast("Enter a positive amount", "error");
+  const { error } = await sb.rpc("init_bankroll", { p_amount: amount, p_currency: currency });
+  if (error) return toast(error.message, "error");
+  toast("Bankroll set"); go("home");
+});
+
+$("#btn-new-race").addEventListener("click", () => {
+  if (!state.bankroll) { toast("Set up bankroll first"); return go("bankroll"); }
+  go("setup");
+});
+
+function prepareSetup() {
+  state.race = null; state.estimates = {}; state.evaluations = [];
+  if (!$("#setup-date").value) {
+    $("#setup-date").value = new Date().toISOString().slice(0, 10);
+  }
+  if ($("#outcomes-list").children.length === 0) {
+    addOutcomeRow(); addOutcomeRow();
+  }
+}
+function addOutcomeRow(name = "") {
+  const list = $("#outcomes-list");
+  const row = document.createElement("div");
+  row.className = "outcome-row";
+  row.innerHTML = `
+    <input class="outcome-name" placeholder="e.g. Liverpool" value="${esc(name)}">
+    <button class="remove" type="button" aria-label="Remove">×</button>`;
+  row.querySelector(".remove").addEventListener("click", () => row.remove());
+  list.appendChild(row);
+}
+$("#btn-add-outcome").addEventListener("click", () => addOutcomeRow());
+
+$("#btn-go-estimate").addEventListener("click", async () => {
+  const event = $("#setup-event").value.trim();
+  if (!event) return toast("Event name required", "error");
+  const venue = $("#setup-venue").value.trim();
+  const race_date = $("#setup-date").value;
+  const names = $$(".outcome-name").map((i) => i.value.trim()).filter(Boolean);
+  if (names.length < 2) return toast("Need at least 2 outcomes", "error");
+  if (!state.bankroll) { toast("Set up bankroll first"); return go("bankroll"); }
+  const { data: { user } } = await sb.auth.getUser();
+  const { data: race, error: e1 } = await sb.from("races")
+    .insert({ user_id: user.id, event, venue, race_date }).select().single();
+  if (e1) return toast(e1.message, "error");
+  const rows = names.map((name, i) =>
+    ({ user_id: user.id, race_id: race.id, name, position: i }));
+  const { data: outcomes, error: e2 } = await sb.from("outcomes")
+    .insert(rows).select().order("id");
+  if (e2) return toast(e2.message, "error");
+  state.race = { id: race.id, event, outcomes };
+  renderEstimateScreen(); go("estimate");
+});
+
+function renderEstimateScreen() {
+  const list = $("#estimate-list");
+  list.innerHTML = "";
+  state.race.outcomes.forEach((o) => {
+    const block = document.createElement("div");
+    block.className = "estimate-block";
+    block.innerHTML = `
+      <div class="name-row">
+        <div>${esc(o.name)}</div>
+        <div class="pct" data-pct="${o.id}">25%</div>
+      </div>
+      <input type="range" min="1" max="99" value="25" step="1" data-est="${o.id}">
+      <textarea placeholder="One sentence: why this probability? (forces System 2)" data-rat="${o.id}"></textarea>`;
+    list.appendChild(block);
+    block.querySelector("input[type=range]").addEventListener("input", updateSum);
+  });
+  updateSum();
+}
+function updateSum() {
+  let total = 0;
+  state.race.outcomes.forEach((o) => {
+    const r = $(`input[data-est="${o.id}"]`);
+    const pct = $(`[data-pct="${o.id}"]`);
+    if (!r) return;
+    const v = parseInt(r.value, 10);
+    total += v; pct.textContent = v + "%";
+  });
+  const el = $("#sum-display");
+  el.textContent = total + "%";
+  el.classList.remove("ok", "warn", "bad");
+  if (total > 105)               el.classList.add("bad");
+  else if (total < 90 || total > 102) el.classList.add("warn");
+  else                            el.classList.add("ok");
+}
+
+$("#btn-lock-estimates").addEventListener("click", async () => {
+  if (!confirm("Lock these estimates? The database will refuse to let you change them after this.")) return;
+  const estimates = {};
+  let valid = true;
+  state.race.outcomes.forEach((o) => {
+    const p = parseInt($(`input[data-est="${o.id}"]`).value, 10) / 100;
+    const rationale = $(`textarea[data-rat="${o.id}"]`).value.trim();
+    if (rationale.length < 10) { toast(`Rationale for ${o.name} too short`, "error"); valid = false; }
+    estimates[o.id] = { estimate: p, rationale };
+  });
+  if (!valid) return;
+  const { error } = await sb.rpc("lock_estimates", {
+    p_race_id: state.race.id, p_estimates: estimates,
+  });
+  if (error) return toast(error.message, "error");
+  state.estimates = estimates;
+  renderRevealScreen(); go("reveal");
+});
+
+function renderRevealScreen() {
+  const list = $("#reveal-list");
+  list.innerHTML = "";
+  state.race.outcomes.forEach((o) => {
+    const est = state.estimates[o.id];
+    const row = document.createElement("div");
+    row.className = "reveal-row";
+    row.innerHTML = `
+      <div class="label">
+        <div class="name">${esc(o.name)}</div>
+        <div class="est">your estimate ${(est.estimate*100).toFixed(0)}%</div>
+      </div>
+      <input type="number" min="1.01" step="0.01" placeholder="odds" data-odds="${o.id}">`;
+    list.appendChild(row);
+  });
+  $("#evaluation-card").classList.add("hidden");
+}
+
+$("#btn-evaluate").addEventListener("click", () => {
+  const evals = [];
+  state.race.outcomes.forEach((o) => {
+    const v = parseFloat($(`input[data-odds="${o.id}"]`).value);
+    if (!(v > 1)) return;
+    const est = state.estimates[o.id].estimate;
+    const ed = edgeOf(est, v);
+    const f = kellyFraction(est, v);
+    const stake = state.bankroll.balance * f;
+    evals.push({
+      outcome_id: o.id, name: o.name, estimate: est,
+      market_odds: v, implied_prob: impliedProb(v),
+      edge: ed, ev_per_unit: est * (v - 1) - (1 - est),
+      kelly_fraction: f,
+      recommended_stake: Math.round(stake * 100) / 100,
+    });
+  });
+  if (evals.length === 0) return toast("Enter at least one set of odds", "error");
+  state.evaluations = evals;
+  renderEvaluations(evals);
+  $("#evaluation-card").classList.remove("hidden");
+});
+
+function renderEvaluations(evals) {
+  const c = $("#evaluations");
+  c.innerHTML = "";
+  evals.forEach((e) => {
+    const positive = e.edge > 0;
+    const row = document.createElement("div");
+    row.className = "eval-row " + (positive ? "positive" : "negative");
+    const verdict = positive
+      ? `<span class="verdict positive">+EV</span>`
+      : `<span class="verdict negative">-EV</span>`;
+    row.innerHTML = `
+      <div><strong>${esc(e.name)}</strong> ${verdict}</div>
+      <table>
+        <tr><td>Your estimate</td><td>${(e.estimate*100).toFixed(1)}%</td></tr>
+        <tr><td>Implied prob (1/odds)</td><td>${(e.implied_prob*100).toFixed(1)}%</td></tr>
+        <tr><td>Edge</td><td>${e.edge>=0?"+":""}${(e.edge*100).toFixed(1)}%</td></tr>
+        <tr><td>EV per 1 unit</td><td>${e.ev_per_unit>=0?"+":""}${e.ev_per_unit.toFixed(3)}</td></tr>
+        <tr><td>¼-Kelly fraction</td><td>${(e.kelly_fraction*100).toFixed(1)}%</td></tr>
+        <tr><td>Recommended stake</td><td><strong>${fmt(e.recommended_stake)} ${state.currency}</strong></td></tr>
+      </table>
+      <div class="bet-controls">
+        <label class="checkbox">
+          <input type="checkbox" data-place="${e.outcome_id}" ${positive ? "checked" : ""}>
+          Place this bet
+        </label>
+        <input class="stake-input" type="number" min="0" step="1"
+          value="${e.recommended_stake}" data-stake="${e.outcome_id}">
+      </div>`;
+    c.appendChild(row);
+  });
+}
+
+$("#btn-place").addEventListener("click", async () => {
+  const override = $("#override-negative").checked;
+  const toPlace = state.evaluations
+    .filter((e) => $(`input[data-place="${e.outcome_id}"]`)?.checked)
+    .map((e) => ({
+      ...e,
+      stake: parseFloat($(`input[data-stake="${e.outcome_id}"]`).value || 0),
+    }))
+    .filter((e) => e.stake > 0);
+  if (toPlace.length === 0) return toast("Select at least one bet", "error");
+  if (toPlace.some((e) => e.edge < 0) && !override) {
+    return toast("Negative-edge selected — tick the override box if you really want to", "error");
+  }
+  let lastErr = null;
+  for (const e of toPlace) {
+    const { error } = await sb.rpc("place_bet", {
+      p_outcome_id: e.outcome_id, p_stake: e.stake,
+      p_market_odds: e.market_odds, p_override_negative: override,
+    });
+    if (error) { lastErr = error; break; }
+  }
+  if (lastErr) return toast(lastErr.message, "error");
+  toast(`Placed ${toPlace.length} bet(s).`);
+  go("home");
+});
+
+async function refreshSettle() {
+  const { data: pending } = await sb.from("bets")
+    .select("*, outcomes(name), races(event)")
+    .eq("status", "pending").order("placed_at", { ascending: false });
+  const list = $("#settle-list");
+  if (!pending || pending.length === 0) {
+    list.innerHTML = '<li class="muted">No pending bets to settle.</li>';
+    return;
+  }
+  list.innerHTML = "";
+  pending.forEach((b) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="row"><span class="name">${esc(b.outcomes?.name)}</span>
+        <span>${fmt(b.stake)} @ ${(+b.market_odds).toFixed(2)}</span></div>
+      <div class="meta">${esc(b.races?.event)} · est ${(b.estimate*100).toFixed(0)}% · placed ${b.placed_at?.slice(0,16).replace("T"," ")}</div>
+      <div class="settle-actions">
+        <button class="win">Won</button>
+        <button class="lose">Lost</button>
+        <button class="push">Push</button>
+      </div>`;
+    li.querySelector(".win").onclick  = () => settle(b.id, "win");
+    li.querySelector(".lose").onclick = () => settle(b.id, "lose");
+    li.querySelector(".push").onclick = () => settle(b.id, "push");
+    list.appendChild(li);
+  });
+}
+async function settle(bid, result) {
+  if (!confirm(`Mark this bet as ${result}?`)) return;
+  const { error } = await sb.rpc("settle_bet", { p_bet_id: bid, p_result: result });
+  if (error) return toast(error.message, "error");
+  toast(`Settled as ${result}`);
+  refreshSettle();
+}
+
+async function loadCalibration() {
+  const { data: bins } = await sb.from("calibration_bins").select("*");
+  const { data: settled } = await sb.from("bets")
+    .select("estimate, status, profit, stake").neq("status", "pending");
+  const total = (settled || []).filter((b) => b.status !== "push").length;
+  const wins  = (settled || []).filter((b) => b.status === "win").length;
+  const profit = (settled || []).reduce((s, b) => s + (b.profit || 0), 0);
+  const stakeSum = (settled || []).reduce((s, b) => s + (+b.stake || 0), 0);
+  const brier = total
+    ? (settled || []).filter((b) => b.status !== "push")
+        .reduce((s, b) => s + Math.pow(b.estimate - (b.status === "win" ? 1 : 0), 2), 0) / total
+    : null;
+  const out = Array.from({ length: 10 }, (_, i) => ({
+    lo: i / 10, hi: (i + 1) / 10, count: 0,
+    claimed_avg: 0, actual_rate: null, calibration_gap: null,
+  }));
+  (bins || []).forEach((b) => {
+    const idx = Math.max(0, Math.min(9, (b.bin || 1) - 1));
+    out[idx].count = b.n;
+    out[idx].claimed_avg = +b.claimed_avg;
+    out[idx].actual_rate = +b.actual_rate;
+    out[idx].calibration_gap = (+b.actual_rate) - (+b.claimed_avg);
+  });
+  return {
+    bins: out, total, wins,
+    hit_rate: total ? wins / total : null,
+    roi: stakeSum ? profit / stakeSum : null,
+    profit, brier_score: brier,
+  };
+}
+
+async function refreshTruth() {
+  const c = await loadCalibration();
+  const stats = $("#cal-stats");
+  if (c.total === 0) {
+    stats.innerHTML = '<div class="muted">No settled bets yet.</div>';
+    $("#cal-chart").innerHTML = "";
+    $("#cal-disclaimer").textContent = "";
+    return;
+  }
+  stats.innerHTML = `
+    <div class="cal-stat-grid">
+      <div class="stat"><div class="v">${c.total}</div><div class="k">settled bets</div></div>
+      <div class="stat"><div class="v">${(c.hit_rate*100).toFixed(1)}%</div><div class="k">hit rate</div></div>
+      <div class="stat"><div class="v">${c.roi !== null ? (c.roi*100).toFixed(1)+"%" : "—"}</div><div class="k">ROI</div></div>
+      <div class="stat"><div class="v">${c.brier_score !== null ? c.brier_score.toFixed(3) : "—"}</div><div class="k">Brier</div></div>
+    </div>`;
+  $("#cal-chart").innerHTML = renderCalChart(c, false);
+  $("#cal-disclaimer").textContent =
+    c.total < 30 ? `Only ${c.total} settled bets — too few for conclusions.` :
+    c.total < 100 ? `${c.total} bets is enough to spot trends, not to confirm an edge.` :
+                    `${c.total} bets · meaningful sample. Brier under 0.20 is well-calibrated.`;
+}
+
+function renderCalChart(c, mini) {
+  let html = "";
+  c.bins.forEach((b) => {
+    if (b.count === 0) {
+      if (mini) return;
+      html += `<div class="cal-bar-row">
+        <div class="bucket">${(b.lo*100).toFixed(0)}-${(b.hi*100).toFixed(0)}%</div>
+        <div class="bar-wrap"></div><div class="gap empty">—</div></div>`;
+      return;
+    }
+    const actualW = (b.actual_rate * 100).toFixed(0);
+    const claimedX = (b.claimed_avg * 100).toFixed(0);
+    const gap = b.calibration_gap;
+    const gapCls = gap > 0.05 ? "pos" : (gap < -0.05 ? "neg" : "");
+    html += `<div class="cal-bar-row">
+      <div class="bucket">${(b.lo*100).toFixed(0)}-${(b.hi*100).toFixed(0)}% (${b.count})</div>
+      <div class="bar-wrap">
+        <div class="bar" style="width:${actualW}%"></div>
+        <div class="marker" style="left:${claimedX}%"></div>
+      </div>
+      <div class="gap ${gapCls}">${gap >= 0 ? "+" : ""}${(gap*100).toFixed(0)}%</div></div>`;
+  });
+  return html;
+}
+
+// ---------- VALUE FINDER ----------
+$$(".sport-tabs button").forEach((b) => {
+  b.addEventListener("click", () => {
+    state.valueSport = b.dataset.sport;
+    $$(".sport-tabs button").forEach((x) => x.classList.toggle("active", x === b));
+    refreshValue();
+  });
+});
+$("#btn-refresh-value").addEventListener("click", () => refreshValue(true));
+
+async function refreshValue(forceRefresh = false) {
+  $("#value-status").textContent = "Loading…";
+  $("#value-list").innerHTML = "";
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(
+      `${window.SUPABASE_URL}/functions/v1/value_bets?sport=${encodeURIComponent(state.valueSport)}${forceRefresh ? "&refresh=1" : ""}`,
+      { headers: { Authorization: `Bearer ${session.access_token}`, apikey: window.SUPABASE_ANON_KEY } }
+    );
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || res.statusText);
+    if (body.error_setup) {
+      $("#value-status").innerHTML = `<div class="muted">${esc(body.error_setup)}</div>`;
+      return;
+    }
+    if (!body.events || body.events.length === 0) {
+      $("#value-status").textContent = "No upcoming matches found.";
+      return;
+    }
+    $("#value-status").textContent = `${body.events.length} upcoming · fair probabilities from ${body.consensus_books_used.join(", ") || "Pinnacle"}`;
+    const list = $("#value-list");
+    list.innerHTML = "";
+    body.events.forEach((ev) => {
+      const card = document.createElement("li");
+      card.className = "value-card";
+      const dt = new Date(ev.commence_time);
+      const startStr = dt.toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit", month: "short", day: "numeric" });
+      card.innerHTML = `
+        <div class="vc-event">${esc(ev.home_team)} vs ${esc(ev.away_team)}</div>
+        <div class="vc-meta">${esc(ev.league || "")} · ${startStr}</div>
+        <div class="vc-rows">${ev.outcomes.map((o) =>
+          `<div class="vc-row">
+            <span>${esc(o.name)}</span>
+            <span class="vc-prob">${(o.fair_prob*100).toFixed(1)}%</span>
+            <span class="vc-odds">${(1/o.fair_prob).toFixed(2)}</span>
+          </div>`).join("")}</div>
+        <div class="muted small" style="margin-top:6px">Tap to start a new event with these outcomes</div>`;
+      card.addEventListener("click", () => loadEventIntoSetup(ev));
+      list.appendChild(card);
+    });
+  } catch (e) {
+    $("#value-status").innerHTML = `<div class="muted">Couldn't load value bets: ${esc(e.message)}.</div>
+      <div class="muted small">Make sure the Odds API key is set in Supabase secrets.</div>`;
+  }
+}
+
+function loadEventIntoSetup(ev) {
+  go("setup");
+  $("#setup-event").value = `${ev.home_team} vs ${ev.away_team}`;
+  $("#setup-venue").value = ev.league || "";
+  $("#setup-date").value = ev.commence_time.slice(0, 10);
+  $("#outcomes-list").innerHTML = "";
+  ev.outcomes.forEach((o) => addOutcomeRow(o.name));
+}
+</script>
+</body>
+</html>
